@@ -1,0 +1,38 @@
+/* === Design tokens === */
+:root {
+    --font-sans: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    --font-mono: ui-monospace, SFMono-Regular, Menlo, Consolas, "Liberation Mono", monospace;
+
+    --bg: #f5f6f8;
+    --bg-elev: #ffffff;
+    --bg-sunken: #f0f2f5;
+    --bg-hover: #f1f4f9;
+    --border: #e3e6eb;
+    --border-strong: #cdd2da;
+    --text: #1f2430;
+    --text-muted: #667085;
+    --text-faint: #98a2b3;
+
+    --accent: #2f6fdb;
+    --accent-hover: #2560c4;
+    --accent-soft: #e7effc;
+    --accent-strong: #1b4c9f;
+
+    --bucket: #2f6fdb;
+    --folder: #d8a031;
+    --file: #7a8599;
+
+    --warn: #a86b12;
+    --warn-soft: #fdf3dc;
+    --danger: #c23b2a;
+    --danger-soft: #fbe7e3;
+
+    --r-sm: 4px;
+    --r-md: 6px;
+    --r-lg: 10px;
+
+    --shadow-sm: 0 1px 2px rgba(16, 24, 40, 0.05);
+
+    --topbar-h: 48px;
+    --row-h: 26px;
+}

@@ -1,0 +1,41 @@
+[package]
+name = "s3-viewer"
+version = "0.1.0"
+edition = "2024"
+
+# S3 file viewer: the REST API (this crate) + the Dioxus client-side UI (ui/), built into wwwroot/
+# and served by this very process through StaticFilesMiddleware. Standalone tool, no service-sdk.
+
+[dependencies]
+my-http-server = { tag = "0.9.0", git = "https://github.com/MyJetTools/my-http-server.git", features = [
+    "macros",
+    "controllers",
+    "static-files",
+] }
+
+# Direct because the `MyHttpInput` / `http_route` expansions are rooted at `my_http_utils::`.
+# Same tag as rest-api-shared's and my-http-server's, so all three resolve to one copy; `server`
+# is what makes the derive emit the sync `parse` the controllers call.
+my-http-utils = { tag = "0.1.0", git = "https://github.com/MyJetTools/my-http-utils.git", features = [
+    "server",
+] }
+
+# Wire models shared verbatim with the wasm UI (which depends on it without features).
+rest-api-shared = { path = "rest-api-shared", features = ["server"] }
+
+# `list_objects_v2` (tree levels) and `download_file_as_stream` (downloads) are in tag 0.1.0.
+my-s3 = { tag = "0.1.0", git = "https://github.com/MyJetTools/my-s3.git" }
+
+my-logger = { tag = "1.3.0", git = "https://github.com/MyJetTools/my-logger.git" }
+
+# `AppStates` (graceful shutdown on SIGINT/SIGTERM). The tag MUST match the one my-http-server, my-logger and my-s3 pin: the
+# `ApplicationStates` / `Logger` traits handed to the HTTP server have to be the same traits.
+rust-extensions = { tag = "0.1.5", git = "https://github.com/MyJetTools/rust-extensions.git", features = [
+    "with-tokio",
+] }
+
+# The `http_route` macro expands to `#[async_trait::async_trait]`, so the crate must be nameable here.
+async-trait = "*"
+tokio = { version = "*", features = ["full"] }
+serde = { version = "*", features = ["derive"] }
+serde_yaml = "*"

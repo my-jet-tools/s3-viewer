@@ -1,0 +1,171 @@
+/* === Left pane: folder tree === */
+
+.tree {
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+    min-height: 0;
+}
+
+.tree__header {
+    flex: 0 0 auto;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 10px 12px 8px;
+    border-bottom: 1px solid var(--border);
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 0.5px;
+    text-transform: uppercase;
+    color: var(--text-muted);
+}
+
+.tree__count {
+    padding: 0 6px;
+    border: 1px solid var(--border);
+    border-radius: 3px;
+    background: var(--bg-sunken);
+    font-family: var(--font-mono);
+    font-weight: 500;
+    color: var(--text-faint);
+}
+
+/* The tree scrolls on its own, independently of the details pane. */
+.tree__body {
+    flex: 1;
+    min-height: 0;
+    overflow: auto;
+    padding: 4px 0 16px;
+    user-select: none;
+}
+
+.tree__message {
+    padding: 8px 10px;
+}
+
+.tree-row {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    height: var(--row-h);
+    padding-right: 10px;
+    white-space: nowrap;
+    cursor: default;
+}
+
+.tree-row:hover {
+    background: var(--bg-hover);
+}
+
+.tree-row.is-selected {
+    background: var(--accent-soft);
+    color: var(--accent-strong);
+}
+
+.tree-row.is-selected .tree-row__label {
+    font-weight: 500;
+}
+
+.tree-row__chevron {
+    flex: 0 0 18px;
+    height: 18px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: var(--r-sm);
+    color: var(--text-faint);
+    cursor: pointer;
+}
+
+.tree-row__chevron:hover {
+    background: var(--border);
+    color: var(--text);
+}
+
+.tree-row__chevron .icon {
+    width: 12px;
+    height: 12px;
+    transition: transform 0.12s ease;
+}
+
+.tree-row__chevron.is-expanded .icon {
+    transform: rotate(90deg);
+}
+
+.tree-row__spacer {
+    flex: 0 0 18px;
+}
+
+.tree-row__icon {
+    display: flex;
+    align-items: center;
+}
+
+.tree-row__icon.is-bucket {
+    color: var(--bucket);
+}
+
+.tree-row__icon.is-folder {
+    color: var(--folder);
+}
+
+.tree-row__icon.is-file {
+    color: var(--file);
+}
+
+.tree-row__label {
+    flex: 1;
+    min-width: 0;
+    padding-left: 2px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+/* Loading / error / empty / truncated rows under an expanded node */
+.tree-row--status {
+    font-size: 12px;
+    color: var(--text-muted);
+}
+
+.tree-row--status:hover {
+    background: transparent;
+}
+
+.tree-row--status .spinner {
+    margin: 0 2px;
+}
+
+.tree-row--muted .tree-row__label {
+    font-style: italic;
+    color: var(--text-faint);
+}
+
+.tree-row--error {
+    color: var(--danger);
+}
+
+.tree-row--warning {
+    color: var(--warn);
+}
+
+.tree-row--warning .icon {
+    width: 14px;
+    height: 14px;
+}
+
+.tree-row__retry {
+    flex-shrink: 0;
+    padding: 0 6px;
+    border: 0;
+    border-radius: var(--r-sm);
+    background: none;
+    font-size: 12px;
+    font-weight: 500;
+    color: var(--accent);
+    cursor: pointer;
+}
+
+.tree-row__retry:hover {
+    background: var(--accent-soft);
+}

@@ -1,0 +1,20 @@
+[package]
+name = "rest-api-shared"
+version = "0.1.0"
+edition = "2024"
+
+# Wire models of the s3-viewer REST API, defined once and reused verbatim by both sides:
+#   * s3-viewer (server, repo root) - depends on this crate WITH the `server` feature, which makes
+#     `MyHttpInput` also emit the sync `parse` used by `#[http_route(input_data: ...)]`
+#   * ui (wasm client)             - depends on it WITHOUT features: the schema + the FlUrl builder
+#
+# Keep it wasm-clean: my-http-utils + serde only, never my-http-server.
+[features]
+default = []
+server = ["my-http-utils/server"]
+
+[dependencies]
+my-http-utils = { tag = "0.1.0", git = "https://github.com/MyJetTools/my-http-utils.git" }
+serde = { version = "*", features = ["derive"] }
+# The MyHttpInput / MyHttpObjectStructure derives expand to `serde_json::...`.
+serde_json = "*"

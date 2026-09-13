@@ -1,0 +1,223 @@
+/* === Right pane: details of the selection === */
+
+.details {
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+    padding: 20px 24px 32px;
+}
+
+.details-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+}
+
+.details-header__main {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    min-width: 0;
+}
+
+.details-header__icon {
+    flex: 0 0 38px;
+    height: 38px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border: 1px solid var(--border);
+    border-radius: var(--r-md);
+    background: var(--bg-elev);
+}
+
+.details-header__icon .icon {
+    width: 20px;
+    height: 20px;
+}
+
+.details-header__icon.is-bucket {
+    color: var(--bucket);
+}
+
+.details-header__icon.is-folder {
+    color: var(--folder);
+}
+
+.details-header__icon.is-file {
+    color: var(--file);
+}
+
+.details-header__texts {
+    min-width: 0;
+}
+
+.details-header__title {
+    font-size: 17px;
+    font-weight: 600;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.details-header__path {
+    margin-top: 1px;
+    color: var(--text-muted);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.details-header__meta {
+    margin-top: 1px;
+    font-size: 12px;
+    color: var(--text-faint);
+}
+
+/* --- Listing table --- */
+.listing-card {
+    background: var(--bg-elev);
+    border: 1px solid var(--border);
+    border-radius: var(--r-lg);
+    box-shadow: var(--shadow-sm);
+    overflow: hidden;
+}
+
+.listing {
+    width: 100%;
+    border-collapse: collapse;
+    table-layout: fixed;
+}
+
+.listing th {
+    padding: 8px 12px;
+    border-bottom: 1px solid var(--border);
+    background: var(--bg-sunken);
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 0.4px;
+    text-align: left;
+    text-transform: uppercase;
+    color: var(--text-muted);
+}
+
+.listing td {
+    height: 34px;
+    padding: 0 12px;
+    border-bottom: 1px solid var(--border);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.listing tbody tr:last-child td {
+    border-bottom: 0;
+}
+
+.listing__row {
+    cursor: default;
+    user-select: none;
+}
+
+.listing__row:hover {
+    background: var(--bg-hover);
+}
+
+.listing .num {
+    text-align: right;
+    font-variant-numeric: tabular-nums;
+}
+
+.listing__col-size {
+    width: 110px;
+}
+
+.listing__col-date {
+    width: 200px;
+}
+
+.listing__col-actions {
+    width: 52px;
+}
+
+.listing__name {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    min-width: 0;
+}
+
+.listing__icon {
+    display: flex;
+    align-items: center;
+}
+
+.listing__icon.is-folder {
+    color: var(--folder);
+}
+
+.listing__icon.is-file {
+    color: var(--file);
+}
+
+.listing__label {
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.listing__actions {
+    text-align: right;
+}
+
+/* --- File card --- */
+.file-card {
+    max-width: 760px;
+    background: var(--bg-elev);
+    border: 1px solid var(--border);
+    border-radius: var(--r-lg);
+    box-shadow: var(--shadow-sm);
+}
+
+.file-card__header {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 16px 18px;
+    border-bottom: 1px solid var(--border);
+}
+
+.file-card__body {
+    padding: 16px 18px;
+}
+
+.file-card__note {
+    margin: 12px 0 0;
+    color: var(--text-muted);
+}
+
+.file-card__footer {
+    display: flex;
+    justify-content: flex-end;
+    padding: 12px 18px;
+    border-top: 1px solid var(--border);
+    background: var(--bg-sunken);
+    border-radius: 0 0 var(--r-lg) var(--r-lg);
+}
+
+.props {
+    display: grid;
+    grid-template-columns: 130px minmax(0, 1fr);
+    gap: 10px 16px;
+    margin: 0;
+}
+
+.props dt {
+    color: var(--text-muted);
+}
+
+.props dd {
+    margin: 0;
+    word-break: break-all;
+}
