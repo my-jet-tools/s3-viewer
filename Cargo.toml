@@ -28,6 +28,14 @@ my-s3 = { tag = "0.1.0", git = "https://github.com/MyJetTools/my-s3.git" }
 
 my-logger = { tag = "1.3.0", git = "https://github.com/MyJetTools/my-logger.git" }
 
+# MCP server mounted at /mcp: read-only list_buckets / list_objects tools. Built on the same
+# my-http-server 0.9.0 and rust-extensions 0.1.5 as this crate. `my-ai-agent` is direct because the
+# `ApplyJsonSchema` derive expands to paths rooted at `my_ai_agent::`.
+mcp-server-middleware = { tag = "0.9.0", git = "https://github.com/my-ai-utils/mcp-server-middleware.git" }
+my-ai-agent = { tag = "0.1.0", git = "https://github.com/my-ai-utils/my-ai-agent.git", features = [
+    "agent",
+] }
+
 # `AppStates` (graceful shutdown on SIGINT/SIGTERM). The tag MUST match the one my-http-server, my-logger and my-s3 pin: the
 # `ApplicationStates` / `Logger` traits handed to the HTTP server have to be the same traits.
 rust-extensions = { tag = "0.1.5", git = "https://github.com/MyJetTools/rust-extensions.git", features = [

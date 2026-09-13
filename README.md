@@ -42,7 +42,7 @@ Error codes:
 
 ### Unknown `/api` routes
 
-The middlewares run in this order: Swagger, the API controllers, `ApiRouteNotFoundMiddleware`, `StaticFilesMiddleware`.
+The middlewares run in this order: Swagger, the API controllers, MCP (`/mcp`), `ApiRouteNotFoundMiddleware`, `StaticFilesMiddleware`.
 
 `ApiRouteNotFoundMiddleware` (`src/http_server/api_route_not_found_middleware.rs`) answers **404** with the text `API route not found` for any request whose first path segment is `api`, compared case-insensitively. It does this for every HTTP method. Real API routes never reach it, because the controllers answer them first. So a mistyped `/api/...` URL, or a known route called with the wrong method, fails loudly. Without this middleware it would get `index.html` with 200.
 
@@ -54,6 +54,25 @@ Only the whole first segment counts:
 | `/apis`, `/api-docs`, `/assets/api`, `/buckets/api/list` | not under `/api`; handled by the static files as usual |
 
 The 404 is not written to the log, because anyone can generate unknown URLs.
+
+## MCP
+
+The same process serves an MCP server at **`/mcp`** (streamable HTTP, `mcp-server-middleware`), so an AI agent can see which folders and files exist without downloading anything. It is read-only: there is no tool that downloads, changes or deletes an object.
+
+| Tool | Input | Result |
+|------|-------|--------|
+| `list_buckets` | none | The bucket names from settings, in settings order. |
+| `list_objects` | `bucket`, `prefix` (optional; empty or absent means the bucket root) | One level: `folders` (`prefix`, `name`) and `files` (`object_key`, `name`, `size`, `last_modified`), sorted by name, plus `is_truncated`. Go deeper by calling it again with a returned folder `prefix`. |
+
+It uses exactly the same listing code as `/api/objects/v1/list` (same paging cap, same folder-marker handling). Errors come back as the tool error text: an unknown bucket says to call `list_buckets`, an S3 failure carries the S3 reason.
+
+Connect Claude Code to a running viewer:
+
+```sh
+claude mcp add --transport http s3-viewer http://localhost:8000/mcp
+```
+
+The server has no authentication, for the API and MCP alike. Expose it only where everyone who can reach it may see the bucket listings.
 
 ## Settings
 
@@ -174,7 +193,7 @@ gh release create 0.1.0 --title "0.1.0" --notes ""
 
 ### Before the first release
 
-- **The GitHub repository does not exist yet.** `origin` points at `git@github.com:my-jet-tools/s3-viewer.git`, but the repository has to be created first.
+- The repository is `github.com/my-jet-tools/s3-viewer`.
 - Add the `PUBLISH_TOKEN` repository secret (Settings → Secrets and variables → Actions), with a token that can push packages to ghcr.io. The release workflow uses it for the build and for `docker login`.
 - Push the workflow files before the first tag. GitHub does not run a workflow that was not in the repository when the tag was created.
 - The image name comes from `github.repository`, and a Docker image name must be lowercase. That works for the `my-jet-tools` owner. If the repository ends up under an owner with capitals (for example `MyJetTools`), `docker build -t` fails. In that case set a lowercase name in `build.rs` with `set_docker_image_name` (see `resolve_image_name` in `cargo-cache/build.rs`).

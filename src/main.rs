@@ -7,6 +7,7 @@ mod app;
 mod flows;
 mod http_server;
 mod mappers;
+mod mcp;
 mod models;
 mod s3_buckets;
 mod scripts;
