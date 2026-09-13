@@ -18,10 +18,12 @@ A single process serves both the REST API and the UI. The UI is a Dioxus client-
 | `Cargo.toml`, `src/` | The API server: `my-http-server` with controllers, Swagger and `StaticFilesMiddleware`. |
 | `rest-api-shared/` | Wire contract: route constants plus request and response models. The server uses it with the `server` feature; the UI uses it without features. |
 | `ui/`              | The Dioxus 0.7 client-side app. HTTP goes through FlUrl. |
-| `wwwroot/`         | The built UI (output of `./build-ui.sh`), served by the API server. |
+| `wwwroot/`         | The built UI (output of `./build-ui.sh`), served by the API server. **Committed**: CI does not build the UI. |
 | `build-ui.sh`      | Wrapper around `ui/build.sh`. |
 | `settings.example.yaml` | Settings file format. |
-| `Dockerfile`       | Packages the release binary together with `wwwroot/`. |
+| `build.rs`         | Runs `ci-utils` on every `cargo build` to generate the next two rows. |
+| `Dockerfile`       | **Generated** by `build.rs`. Packages the release binary together with `wwwroot/`. |
+| `.github/workflows/` | **Generated** by `build.rs`: `release.yaml` (tag → Docker image) and `test.yml` (build + tests on every push). |
 
 ## API
 
@@ -35,7 +37,23 @@ All three routes are `GET`. The Swagger UI is at `/swagger`.
 
 Error codes:
 - **404:** the bucket is not in settings, or the bucket or key does not exist in S3.
+- **404 `API route not found`:** the path is under `/api` but no route answers it (see [Unknown `/api` routes](#unknown-api-routes)).
 - **500:** any other S3 failure. The client gets a short message and the details go to the log.
+
+### Unknown `/api` routes
+
+The middlewares run in this order: Swagger, the API controllers, `ApiRouteNotFoundMiddleware`, `StaticFilesMiddleware`.
+
+`ApiRouteNotFoundMiddleware` (`src/http_server/api_route_not_found_middleware.rs`) answers **404** with the text `API route not found` for any request whose first path segment is `api`, compared case-insensitively. It does this for every HTTP method. Real API routes never reach it, because the controllers answer them first. So a mistyped `/api/...` URL, or a known route called with the wrong method, fails loudly. Without this middleware it would get `index.html` with 200.
+
+Only the whole first segment counts:
+
+| Path | Result |
+|------|--------|
+| `/api`, `/api/`, `/api/typo`, `/API/buckets/v1/nope` | 404 `API route not found` |
+| `/apis`, `/api-docs`, `/assets/api`, `/buckets/api/list` | not under `/api`; handled by the static files as usual |
+
+The 404 is not written to the log, because anyone can generate unknown URLs.
 
 ## Settings
 
@@ -74,7 +92,7 @@ cargo install dioxus-cli --version 0.7.10 --locked
 2. Replaces `wwwroot/` with the output.
 3. Starts from a clean dx output dir, so old hashed js/wasm files are not carried over.
 
-Run it after every change under `ui/`, and commit `wwwroot/` together with the change.
+Run it after every change under `ui/`, and commit `wwwroot/` together with the change. The release workflow ships whatever `wwwroot/` is committed.
 
 ## Run
 
@@ -87,15 +105,79 @@ cargo run --release
 
 Then open <http://localhost:8000> (or whatever `http_port` is set to).
 
-`StaticFilesMiddleware` answers any GET path that is not an API route or `/swagger` with `wwwroot/index.html`, so the client-side router owns every other path. A mistyped `/api/...` URL therefore returns `index.html`, not a 404.
+`StaticFilesMiddleware` answers any GET path that is not an API route or `/swagger` with `wwwroot/index.html`, so the client-side router owns every other path. The exception is `/api`: an unknown path under it gets a 404 (see [Unknown `/api` routes](#unknown-api-routes)).
 
 ### Docker
 
 ```sh
-cargo build --release && ./build-ui.sh
+cargo build --release          # also regenerates the Dockerfile
 docker build -t s3-viewer .
 docker run -p 8000:8000 -v ~/.s3-viewer:/root/.s3-viewer:ro s3-viewer
 ```
+
+The image is `ubuntu:22.04` and has no `WORKDIR`, so the process runs in `/`. The binary is `/target/release/s3-viewer`, `./wwwroot` resolves to `/wwwroot`, and `~/.s3-viewer` is `/root/.s3-viewer`.
+
+## Lints
+
+All lint levels are in `Cargo.toml`, not in the sources:
+
+```toml
+[lints.rust]
+warnings = "deny"
+
+[lints.clippy]
+all = { level = "deny", priority = -1 }
+pedantic = { level = "deny", priority = -1 }
+result_large_err = "allow"   # the one framework-dictated exception, see below
+```
+
+`src/` has no `#![deny]` and no `#[allow]` attributes. A source attribute overrides the manifest: a crate-level `#![deny(clippy::all)]` would re-deny the exception, and a local `#[allow]` hides a lint where nobody looks. Before a change is done, `cargo clippy --all-targets -- -D warnings` and `cargo fmt --check` must both pass.
+
+**The one exception: `result_large_err`.** `http_route` makes every action's `handle_request` return `Result<HttpOkResult, HttpFailResult>` as is. `HttpFailResult` is `my-http-server`'s type and is larger than clippy's 128-byte limit, so it can't be boxed on our side. With the lint set to `warn`, the only hits are the `handle_request` fns of `ListObjectsAction` and `DownloadObjectAction`. Everything below the handlers returns the small `S3ViewerError`, so the exception hides nothing of ours. Delete it when `HttpFailResult` gets smaller upstream.
+
+**`unused_async` is not an exception.** `ListBucketsAction` has nothing to await, so its `handle_request` is a plain fn that returns `std::future::ready(...)`. `http_route` only needs something it can `.await`, not an `async fn`.
+
+## CI and release
+
+`build.rs` runs `CiGenerator` from `ci-utils` (tag `0.1.3`) on every `cargo build` and rewrites:
+
+- `Dockerfile`: `ubuntu:22.04`, the binary at `./target/release/s3-viewer`, and `./wwwroot` copied next to it.
+- `.github/workflows/release.yaml`: runs on any tag. It sets the `Cargo.toml` version to the tag, runs `cargo build --release`, builds the image and pushes `ghcr.io/${{ github.repository }}:<tag>`.
+- `.github/workflows/test.yml`: runs `cargo build --all-features` and `cargo test` on every push and pull request.
+
+**Do not edit these files by hand.** The next `cargo build` overwrites them. Change `build.rs` instead, and commit what it generates.
+
+**The release builds only the Rust server.** Nothing in CI builds the UI, so the image contains whatever `wwwroot/` is committed.
+
+### Releasing
+
+1. If anything under `ui/` changed since the last release, run `./build-ui.sh` and **commit `wwwroot/`**.
+2. Run `cargo build && cargo clippy --all-targets -- -D warnings && cargo test`. Commit and push, including `Dockerfile` and `.github/`.
+3. Create the release. The tag is the bare version; the workflow writes it into `Cargo.toml` and uses it as the image tag:
+   ```sh
+   gh release create 0.1.0 --title "0.1.0" --notes ""
+   ```
+4. Follow the build:
+   ```sh
+   gh run list --limit 5
+   gh run watch <run-id>
+   gh run view <run-id> --log-failed
+   ```
+   The result is the image `ghcr.io/my-jet-tools/s3-viewer:0.1.0`.
+
+To re-deploy the same version:
+
+```sh
+gh release delete 0.1.0 --yes --cleanup-tag
+gh release create 0.1.0 --title "0.1.0" --notes ""
+```
+
+### Before the first release
+
+- **The GitHub repository does not exist yet.** `origin` points at `git@github.com:my-jet-tools/s3-viewer.git`, but the repository has to be created first.
+- Add the `PUBLISH_TOKEN` repository secret (Settings → Secrets and variables → Actions), with a token that can push packages to ghcr.io. The release workflow uses it for the build and for `docker login`.
+- Push the workflow files before the first tag. GitHub does not run a workflow that was not in the repository when the tag was created.
+- The image name comes from `github.repository`, and a Docker image name must be lowercase. That works for the `my-jet-tools` owner. If the repository ends up under an owner with capitals (for example `MyJetTools`), `docker build -t` fails. In that case set a lowercase name in `build.rs` with `set_docker_image_name` (see `resolve_image_name` in `cargo-cache/build.rs`).
 
 ## Dependency note: my-s3
 
