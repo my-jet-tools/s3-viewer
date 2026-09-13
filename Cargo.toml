@@ -39,3 +39,27 @@ async-trait = "*"
 tokio = { version = "*", features = ["full"] }
 serde = { version = "*", features = ["derive"] }
 serde_yaml = "*"
+
+# build.rs regenerates Dockerfile, .github/workflows/release.yaml and .github/workflows/test.yml.
+[build-dependencies]
+ci-utils = { git = "https://github.com/MyJetTools/ci-utils.git", tag = "0.1.3" }
+
+# ALL lint levels of this crate live here, never as `#![deny]` / `#[allow]` in the sources: a source
+# attribute overrides this table, so a crate-level `#![deny(clippy::all)]` would silently re-deny the
+# exception below, and a scattered `#[allow]` is invisible from here.
+[lints.rust]
+warnings = "deny"
+
+[lints.clippy]
+all = { level = "deny", priority = -1 }
+pedantic = { level = "deny", priority = -1 }
+
+# THE ONE FRAMEWORK-DICTATED EXCEPTION.
+# `http_route` makes every action's `handle_request` return `Result<HttpOkResult, HttpFailResult>`
+# as is (the generated `HandleHttpRequest` impl returns it verbatim), and `HttpFailResult` is
+# `my-http-server`'s type, well over clippy's 128-byte threshold. It can not be boxed on our side.
+# Checked by setting this to "warn": the only hits are the `handle_request` fns of
+# ListObjectsAction and DownloadObjectAction. Everything below the handlers returns the small
+# `S3ViewerError`, so nothing of ours hides behind this line. Delete it the day `HttpFailResult`
+# gets smaller upstream.
+result_large_err = "allow"

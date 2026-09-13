@@ -6,9 +6,10 @@ use my_http_server::{MyHttpServer, StaticFilesMiddleware};
 
 use crate::app::{APP_NAME, APP_VERSION, AppContext};
 
-// Swagger, then the API controllers, then the UI: the static files middleware serves ./wwwroot
-// (relative to the working directory) and answers any other path with index.html, so the client-
-// side app can own its routes.
+// Swagger, then the API controllers, then the /api 404, then the UI. The static files middleware
+// serves ./wwwroot (relative to the working directory) and answers any other path with index.html,
+// so the client-side app can own its routes. Anything under /api that no controller answered is
+// stopped before that point with a 404.
 pub fn start_http_server(app: &Arc<AppContext>) {
     let addr = SocketAddr::from(([0, 0, 0, 0], app.settings.get_http_port()));
 
@@ -30,6 +31,7 @@ pub fn start_http_server(app: &Arc<AppContext>) {
 
     http_server.add_middleware(swagger_middleware);
     http_server.add_middleware(controllers);
+    http_server.add_middleware(Arc::new(super::ApiRouteNotFoundMiddleware));
     http_server.add_middleware(static_files_middleware);
 
     http_server.start_auto(app.states.clone(), my_logger::LOGGER.clone());

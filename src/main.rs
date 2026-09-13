@@ -1,6 +1,5 @@
-#![deny(warnings)]
-#![deny(clippy::all)]
-#![deny(clippy::pedantic)]
+// Lint levels live in Cargo.toml ([lints]), not here: a crate-level `#![deny(...)]` would override
+// the manifest and re-deny the one framework-dictated exception declared there.
 
 use std::sync::Arc;
 

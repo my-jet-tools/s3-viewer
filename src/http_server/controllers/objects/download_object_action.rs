@@ -32,8 +32,8 @@ impl DownloadObjectAction {
 
 // The return type is dictated by `http_route`: its generated trait impl returns this fn's
 // `Result<HttpOkResult, HttpFailResult>` as is, so the framework's error type can not be boxed on
-// our side. Everything below the handler returns `S3ViewerError`.
-#[allow(clippy::result_large_err)]
+// our side (see `result_large_err` in Cargo.toml). Everything below the handler returns
+// `S3ViewerError`.
 async fn handle_request(
     action: &DownloadObjectAction,
     input_data: DownloadObjectInputModel,

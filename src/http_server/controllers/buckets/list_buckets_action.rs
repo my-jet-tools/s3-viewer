@@ -27,16 +27,14 @@ impl ListBucketsAction {
     }
 }
 
-// The shape is dictated by `http_route`: its generated trait impl awaits
-// `handle_request(self, ctx)` and returns its `Result<HttpOkResult, HttpFailResult>` as is. So the
-// fn must be async although this handler has nothing to await, and the error type is the
-// framework's, which can not be boxed on our side.
-#[allow(clippy::unused_async, clippy::result_large_err)]
-async fn handle_request(
+// `http_route` generates `handle_request(self, ctx).await`, so it needs something it can await, not
+// an `async fn`. This handler has nothing to await (the buckets come from settings), so it is a
+// plain fn that hands back an already completed future.
+fn handle_request(
     action: &ListBucketsAction,
     _ctx: &mut HttpContext,
-) -> Result<HttpOkResult, HttpFailResult> {
+) -> std::future::Ready<Result<HttpOkResult, HttpFailResult>> {
     let response = crate::flows::list_buckets(&action.app);
 
-    HttpOutput::as_json(response).into_ok_result(false)
+    std::future::ready(HttpOutput::as_json(response).into_ok_result(false))
 }
