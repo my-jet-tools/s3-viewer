@@ -1,12 +1,16 @@
-mod bucket_settings_model;
-pub use bucket_settings_model::*;
 mod expand_home_dir;
 pub use expand_home_dir::*;
 mod read_settings;
 pub use read_settings::*;
+mod s3_conn_string;
+pub use s3_conn_string::*;
+mod s3_conn_string_error;
+pub use s3_conn_string_error::*;
 mod settings_model;
 pub use settings_model::*;
 mod settings_validation_error;
 pub use settings_validation_error::*;
+mod settings_yaml_model;
+pub use settings_yaml_model::*;
 mod validate_settings;
 pub use validate_settings::*;

@@ -1,4 +1,4 @@
-use super::SettingsModel;
+use super::{SettingsModel, SettingsYamlModel};
 
 pub const SETTINGS_PATH_ENV_VARIABLE: &str = "S3_VIEWER_SETTINGS";
 
@@ -16,18 +16,17 @@ pub async fn read_settings() -> SettingsModel {
         ),
     };
 
-    let settings: SettingsModel = match serde_yaml::from_slice(content.as_slice()) {
+    let settings: SettingsYamlModel = match serde_yaml::from_slice(content.as_slice()) {
         Ok(settings) => settings,
         Err(err) => panic!(
             "The settings file '{file_name}' is not valid s3-viewer settings yaml (see settings.example.yaml): {err}"
         ),
     };
 
-    if let Err(err) = super::validate_settings(&settings) {
-        panic!("Invalid settings file '{file_name}': {err}");
+    match super::validate_settings(settings) {
+        Ok(settings) => settings,
+        Err(err) => panic!("Invalid settings file '{file_name}': {err}"),
     }
-
-    settings
 }
 
 fn get_settings_file_name() -> String {

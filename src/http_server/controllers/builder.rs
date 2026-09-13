@@ -19,15 +19,23 @@ mod tests {
     use std::sync::Arc;
 
     use crate::app::AppContext;
+    use crate::settings::{S3ConnString, SettingsModel};
 
     // The `http_route` literals can not name the shared constants, so this pins them together:
     // the UI calls the constants, the server must answer on exactly those routes.
     #[test]
     fn get_routes_match_the_shared_route_constants() {
-        let settings = serde_yaml::from_str(
-            "buckets:\n  - name: b1\n    endpoint: https://e\n    region: r\n    access_key: a\n    secret_key: s\n",
-        )
-        .unwrap();
+        let bucket = match S3ConnString::parse(
+            "Endpoint=https://e;Region=r;AccessKey=a;SecretKey=s;Bucket=b1",
+        ) {
+            Ok(bucket) => bucket,
+            Err(err) => panic!("the test connection string must be valid: {err}"),
+        };
+
+        let settings = SettingsModel {
+            http_port: 8000,
+            buckets: vec![bucket],
+        };
 
         let controllers = super::build_controllers(&Arc::new(AppContext::new(settings)));
 

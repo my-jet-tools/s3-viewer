@@ -1,12 +1,15 @@
 # s3-viewer settings. Copy to ~/.s3-viewer, or point the S3_VIEWER_SETTINGS env variable at another file.
 
-# HTTP port the API and the UI are served on. Optional, 8000 when absent.
+# HTTP port the API, the UI and MCP are served on. Optional, 8000 when absent.
 http_port: 8000
 
-# The root level of the tree, in this order. `name` is the S3 bucket name and must be unique.
+# The root level of the tree, in this order: one S3 connection string per bucket - the same format
+# as the s3_conn_string of my-service-bus-persistence. Keys are case-sensitive:
+#   Endpoint  - S3 endpoint URL, with the scheme
+#   Region    - region used for the SigV4 signature
+#   AccessKey - access key id
+#   SecretKey - secret access key (only the first '=' separates, so a base64 secret is fine; no ';')
+#   Bucket    - the bucket, shown as a root node of the tree; must be unique
+#   Debug     - optional: 1/true/yes/on traces every S3 request of this bucket to the console
 buckets:
-  - name: my-bucket
-    endpoint: https://nbg1.your-objectstorage.com
-    region: nbg1
-    access_key: YOUR_ACCESS_KEY
-    secret_key: YOUR_SECRET_KEY
+  - "Endpoint=https://nbg1.your-objectstorage.com;Region=nbg1;AccessKey=YOUR_ACCESS_KEY;SecretKey=YOUR_SECRET_KEY;Bucket=my-bucket"

@@ -1,4 +1,4 @@
-use crate::settings::BucketSettingsModel;
+use crate::settings::S3ConnString;
 
 use super::S3Bucket;
 
@@ -9,7 +9,7 @@ pub struct S3Buckets {
 }
 
 impl S3Buckets {
-    pub fn new(settings: &[BucketSettingsModel]) -> Self {
+    pub fn new(settings: &[S3ConnString]) -> Self {
         Self {
             buckets: settings.iter().map(S3Bucket::new).collect(),
         }

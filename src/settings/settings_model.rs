@@ -1,18 +1,16 @@
-use serde::Deserialize;
-
-use super::BucketSettingsModel;
+use super::S3ConnString;
 
 pub const DEFAULT_HTTP_PORT: u16 = 8000;
 
-// The format is documented by settings.example.yaml at the repo root.
-#[derive(Deserialize)]
+// Validated settings: the port resolved and every bucket connection string parsed, in settings
+// order. Built by `validate_settings` from the file (`SettingsYamlModel`).
 pub struct SettingsModel {
-    pub http_port: Option<u16>,
-    pub buckets: Vec<BucketSettingsModel>,
+    pub http_port: u16,
+    pub buckets: Vec<S3ConnString>,
 }
 
 impl SettingsModel {
     pub fn get_http_port(&self) -> u16 {
-        self.http_port.unwrap_or(DEFAULT_HTTP_PORT)
+        self.http_port
     }
 }

@@ -81,19 +81,26 @@ The settings file is read at start-up from:
 1. the path in the `S3_VIEWER_SETTINGS` environment variable, if set, or
 2. `~/.s3-viewer`.
 
-The format is in `settings.example.yaml`:
+Each bucket is **one S3 connection string**, in the same `Key=Value;Key=Value` format as the `s3_conn_string` of my-service-bus-persistence (see `settings.example.yaml`):
 
 ```yaml
 http_port: 8000          # optional, 8000 when absent
-buckets:                 # the root of the tree, in this order; names must be unique
-  - name: my-bucket
-    endpoint: https://nbg1.your-objectstorage.com
-    region: nbg1
-    access_key: YOUR_ACCESS_KEY
-    secret_key: YOUR_SECRET_KEY
+buckets:                 # the root of the tree, in this order
+  - "Endpoint=https://nbg1.your-objectstorage.com;Region=nbg1;AccessKey=YOUR_ACCESS_KEY;SecretKey=YOUR_SECRET_KEY;Bucket=my-bucket"
 ```
 
-Credentials stay on the server; the UI only ever sees bucket names. A missing or invalid file stops start-up with a message that says what to fix.
+| Key | Meaning |
+|-----|---------|
+| `Endpoint` | S3 endpoint URL, with the scheme. |
+| `Region` | Region used for the SigV4 signature. |
+| `AccessKey` | Access key id. |
+| `SecretKey` | Secret access key. Only the **first** `=` of an entry separates, so a base64 secret with its own `=` is fine. A value can not contain `;`. |
+| `Bucket` | The bucket, shown as a root node of the tree. Must be unique across the list. |
+| `Debug` | Optional. `1`/`true`/`yes`/`on` traces every S3 request of this bucket to the console; `0`/`false`/`no`/`off` or absent is off. |
+
+Keys are case-sensitive. `Endpoint`, `Region`, `AccessKey`, `SecretKey` and `Bucket` are required and must not be empty. An unknown, repeated or missing key, or an unreadable `Debug` value, stops start-up with a message that names the bucket's position and the key - never a value, so the secret does not end up in a log.
+
+Credentials stay on the server; the UI and the MCP tools only ever see bucket names.
 
 ## Build the UI
 
